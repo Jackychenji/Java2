@@ -6,7 +6,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- *
  * This is just a demo for you, please run it on JDK17 (some statements may be not allowed in lower version).
  * This is just a demo, and you can extend and implement functions
  * based on this demo, or implement it in a different way.
@@ -22,7 +21,7 @@ public class OnlineCoursesAnalyzer {
             br = new BufferedReader(new FileReader(datasetPath, StandardCharsets.UTF_8));
             br.readLine();
             while ((line = br.readLine()) != null) {
-                String[] info = line.split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)", -1);
+                String[] info = line.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)", -1);
                 Course course = new Course(info[0], info[1], new Date(info[2]), info[3], info[4], info[5],
                         Integer.parseInt(info[6]), Integer.parseInt(info[7]), Integer.parseInt(info[8]),
                         Integer.parseInt(info[9]), Integer.parseInt(info[10]), Double.parseDouble(info[11]),
@@ -73,28 +72,41 @@ public class OnlineCoursesAnalyzer {
         return sortedMap;
     }
 
-    //3
+    //3 finished
     public Map<String, List<List<String>>> getCourseListOfInstructor() {
-        Map<String, List<Course>> coursesByInstructor = courses.stream()
-                .flatMap(course -> Arrays.stream(course.instructors.split(",\\s*")))
-                .map(String::trim)
-                .distinct()
-                .collect(Collectors.toMap(
-                        instructor -> instructor,
-                        instructor -> courses.stream()
-                                .filter(course -> course.instructors.contains(instructor))
-                                .collect(Collectors.toList())
-                ));
-        Map<String, List<List<String>>> courseListByInstructor = new HashMap<>();
-        for (Map.Entry<String, List<Course>> entry : coursesByInstructor.entrySet()) {
-            String instructor = entry.getKey();
-            List<Course> courses = entry.getValue();
-            List<List<String>> courseList = courses.stream()
-                    .map(course -> Arrays.asList(course.subject, course.title))
-                    .collect(Collectors.toList());
-            courseListByInstructor.put(instructor, courseList);
+        List<String> people = new ArrayList<>();
+        for (Course cours : courses) {
+            if (!cours.instructors.contains(",")) {
+                if (!people.contains(cours.instructors)) {
+                    people.add(cours.instructors);
+                }
+            } else {
+                String[] many = cours.instructors.split(", ");
+                for (String s : many) {
+                    if (!people.contains(s)) {
+                        people.add(s);
+                    }
+                }
+            }
         }
-        return courseListByInstructor;
+        Map<String, List<List<String>>> map = new HashMap<>();
+
+        for (int i = 0; i < people.size(); i++) {
+            List<List<String>> thisOne = new ArrayList<>();
+            int now = i;
+            List<String> single = new ArrayList<>(courses.stream()
+                    .filter(course -> course.instructors.equals(people.get(now)) && !course.instructors.contains(","))
+                    .map(course -> course.title).distinct().sorted().toList());
+            List<String> notSingle = new ArrayList<>(courses.stream()
+                    .filter(course -> Arrays.asList(course.instructors.split(", ")).contains(people.get(now)) && course.instructors.contains(","))
+                    .map(course -> course.title).distinct().sorted().toList());
+            thisOne.add(single);
+            thisOne.add(notSingle);
+            map.put(people.get(now), thisOne);
+        }
+        return map;
+
+
     }
 
     //4 finished
@@ -126,64 +138,64 @@ public class OnlineCoursesAnalyzer {
                 .map(course -> course.title).distinct().sorted().collect(Collectors.toList());
     }
 
-    //6
+    //6 finished
     public List<String> recommendCourses(int age, int gender, int isBachelorOrHigher) {
         List<Course> courses1 = new ArrayList<>();
         for (Course value : courses) {
             courses1.add(new Course(value));
         }
-        HashMap<String,Integer> map3 = new HashMap<>();
-        HashMap<String,Course> map = new HashMap<>();
+        HashMap<String, Integer> map3 = new HashMap<>();
+        HashMap<String, Course> map = new HashMap<>();
         for (Course cours : courses1) {
             if (!map.containsKey(cours.number)) {
-                map3.put(cours.number,1);
+                map3.put(cours.number, 1);
                 map.put(cours.number, cours);
-            }else {
+            } else {
                 Course course = map.get(cours.number);
-                if (course.launchDate.before(cours.launchDate)){
-                    cours.percentDegree = (cours.percentDegree+course.percentDegree*map3.get(course.number))/(map3.get(course.number)+1);
-                    cours.percentMale = (cours.percentMale+course.percentMale*map3.get(course.number))/(map3.get(course.number)+1);
-                    cours.medianAge = (cours.medianAge+course.medianAge*map3.get(course.number))/(map3.get(course.number)+1);
-                    map.replace(cours.number,course,cours);
-                    map3.replace(cours.number,map3.get(cours.number),map3.get(cours.number)+1);
-                }else{
-                    course.percentDegree = (cours.percentDegree+course.percentDegree*map3.get(course.number))/(map3.get(course.number)+1);
-                    course.percentMale = (cours.percentMale+course.percentMale*map3.get(course.number))/(map3.get(course.number)+1);
-                    course.medianAge = (cours.medianAge+course.medianAge*map3.get(course.number))/(map3.get(course.number)+1);
-                    map3.replace(course.number,map3.get(course.number),map3.get(course.number)+1);
+                if (course.launchDate.before(cours.launchDate)) {
+                    cours.percentDegree = (cours.percentDegree + course.percentDegree * map3.get(course.number)) / (map3.get(course.number) + 1);
+                    cours.percentMale = (cours.percentMale + course.percentMale * map3.get(course.number)) / (map3.get(course.number) + 1);
+                    cours.medianAge = (cours.medianAge + course.medianAge * map3.get(course.number)) / (map3.get(course.number) + 1);
+                    map.replace(cours.number, course, cours);
+                    map3.replace(cours.number, map3.get(cours.number), map3.get(cours.number) + 1);
+                } else {
+                    course.percentDegree = (cours.percentDegree + course.percentDegree * map3.get(course.number)) / (map3.get(course.number) + 1);
+                    course.percentMale = (cours.percentMale + course.percentMale * map3.get(course.number)) / (map3.get(course.number) + 1);
+                    course.medianAge = (cours.medianAge + course.medianAge * map3.get(course.number)) / (map3.get(course.number) + 1);
+                    map3.replace(course.number, map3.get(course.number), map3.get(course.number) + 1);
                 }
             }
         }
         List<Course> newCourses = new ArrayList<>(map.values());
-        HashMap<String,Course> map2 = new HashMap<>();
+        HashMap<String, Course> map2 = new HashMap<>();
         for (Course cours : newCourses) {
             if (!map2.containsKey(cours.title)) {
                 map2.put(cours.title, cours);
-            }else{
+            } else {
                 Course course = map2.get(cours.title);
-                double coursSum = Math.pow((age-cours.medianAge),2)+
-                        Math.pow(gender*100-cours.percentMale,2)+Math.pow(isBachelorOrHigher*100- cours.percentDegree,2);
-                double courseSum =  Math.pow((age-course.medianAge),2)+
-                        Math.pow(gender*100-course.percentMale,2)+Math.pow(isBachelorOrHigher*100- course.percentDegree,2);
-                if (coursSum<courseSum)map2.replace(cours.title,course,cours);
+                double coursSum = Math.pow((age - cours.medianAge), 2) +
+                        Math.pow(gender * 100 - cours.percentMale, 2) + Math.pow(isBachelorOrHigher * 100 - cours.percentDegree, 2);
+                double courseSum = Math.pow((age - course.medianAge), 2) +
+                        Math.pow(gender * 100 - course.percentMale, 2) + Math.pow(isBachelorOrHigher * 100 - course.percentDegree, 2);
+                if (coursSum < courseSum) map2.replace(cours.title, course, cours);
             }
         }
         newCourses = new ArrayList<>(map2.values());
         double[] Average = new double[newCourses.size()];
         for (int i = 0; i < Average.length; i++) {
-            Average[i] = (age-newCourses.get(i).medianAge) * (age-newCourses.get(i).medianAge)+
-                    (gender * 100 - newCourses.get(i).percentMale) * (gender * 100 - newCourses.get(i).percentMale)+
+            Average[i] = (age - newCourses.get(i).medianAge) * (age - newCourses.get(i).medianAge) +
+                    (gender * 100 - newCourses.get(i).percentMale) * (gender * 100 - newCourses.get(i).percentMale) +
                     (isBachelorOrHigher * 100 - newCourses.get(i).percentDegree) * (isBachelorOrHigher * 100 - newCourses.get(i).percentDegree);
         }
         for (int i = 0; i < Average.length; i++) {
             for (int j = i; j < Average.length; j++) {
-                if (Average[i]>Average[j]){
+                if (Average[i] > Average[j]) {
                     double temp = Average[i];
                     Average[i] = Average[j];
                     Average[j] = temp;
                     Course temp1 = newCourses.get(i);
-                    newCourses.set(i,newCourses.get(j));
-                    newCourses.set(j,temp1);
+                    newCourses.set(i, newCourses.get(j));
+                    newCourses.set(j, temp1);
                 }
             }
         }
@@ -192,11 +204,7 @@ public class OnlineCoursesAnalyzer {
             answer.add(newCourses.get(i).title);
         }
         return answer;
-//        return newCourses.stream().sorted(Comparator.comparingDouble(
-//                        course -> (age-course.medianAge) * (age-course.medianAge) +
-//                                (gender * 100 - course.percentMale) * (gender * 100 - course.percentMale)
-//                                + (isBachelorOrHigher * 100 - course.percentDegree) * (isBachelorOrHigher * 100 - course.percentDegree)))
-//                .map(course -> course.title).limit(10).toList();
+
     }
 
 }
@@ -357,7 +365,8 @@ class Course {
         this.percentFemale = percentFemale;
         this.percentDegree = percentDegree;
     }
-    public Course(Course course){
+
+    public Course(Course course) {
         this.institution = course.institution;
         this.number = course.number;
         this.launchDate = course.launchDate;
@@ -365,7 +374,8 @@ class Course {
         if (course.title.endsWith("\"")) course.title = course.title.substring(0, course.title.length() - 1);
         this.title = course.title;
         if (course.instructors.startsWith("\"")) course.instructors = course.instructors.substring(1);
-        if (course.instructors.endsWith("\"")) course.instructors = course.instructors.substring(0, course.instructors.length() - 1);
+        if (course.instructors.endsWith("\""))
+            course.instructors = course.instructors.substring(0, course.instructors.length() - 1);
         this.instructors = course.instructors;
         if (course.subject.startsWith("\"")) course.subject = course.subject.substring(1);
         if (course.subject.endsWith("\"")) course.subject = course.subject.substring(0, course.subject.length() - 1);
