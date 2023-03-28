@@ -140,7 +140,7 @@ public class LocalAnalyzerTest {
             String expected = Files.readString(Paths.get("resources", "local_answer", "Q3.txt"),
                             StandardCharsets.UTF_8)
                     .replace("\r", "").strip();
-            assertTrue(compareMapWithoutOrder(res, expected));
+             assertTrue(compareMapWithoutOrder(res, expected));
         } catch (NoSuchMethodException | InvocationTargetException |
                  IllegalAccessException | IOException e) {
             e.printStackTrace();
